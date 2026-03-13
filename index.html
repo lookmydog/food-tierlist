@@ -305,66 +305,107 @@
 
   .tier-items {
     flex: 1;
-    padding: 12px 14px;
+    padding: 10px 12px;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     align-content: flex-start;
-    min-height: 80px;
+    min-height: 90px;
   }
 
-  /* ── Food Item ── */
+  /* ── Food Item (卡片) ── */
   .food-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--surface2);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 99px;
-    padding: 6px 12px 6px 6px;
+    border-radius: 12px;
+    padding: 0;
     cursor: grab;
     transition: all 0.15s;
     user-select: none;
-    max-width: 260px;
+    width: 110px;
+    overflow: hidden;
     animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    position: relative;
+  }
+  @media (max-width: 480px) {
+    .food-item { width: calc(50% - 4px); }
+    .tier-items { gap: 8px; }
   }
   @keyframes popIn {
     from { transform: scale(0.7); opacity: 0; }
     to   { transform: scale(1);   opacity: 1; }
   }
   .food-item:hover {
-    background: white;
     border-color: #ccc;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
   }
   .food-item:active { cursor: grabbing; transform: scale(0.97); }
   .food-item.dragging { opacity: 0.4; }
 
+  /* 卡片頂部色條 */
+  .food-item-bar {
+    height: 4px;
+    width: 100%;
+    flex-shrink: 0;
+  }
+
+  /* 卡片內容區 */
+  .food-item-body {
+    padding: 8px 10px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+  }
+
+  .food-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-all;
+  }
+  .food-name:hover { color: var(--accent); }
+
+  /* 卡片底部列：頭像 + 評論 + 刪除 */
+  .food-item-footer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px 8px;
+  }
+
   .food-avatar {
-    width: 22px; height: 22px;
+    width: 20px; height: 20px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     font-weight: 700;
     color: white;
     flex-shrink: 0;
-    title: '';
   }
-  .food-name {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text);
-    text-decoration: none;
-    white-space: nowrap;
+  .food-added-by {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 160px;
+    white-space: nowrap;
   }
-  .food-name:hover { color: var(--accent); }
+
   .food-delete {
-    width: 18px; height: 18px;
-    border-radius: 50%;
+    width: 22px; height: 22px;
+    border-radius: 6px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -381,17 +422,16 @@
   /* delete confirm state */
   .food-item.confirm-delete {
     border-color: #e74c3c;
-    background: #fff5f5;
     box-shadow: 0 0 0 2px rgba(231,76,60,0.15);
   }
   .food-delete.confirm {
     width: auto;
-    border-radius: 99px;
+    border-radius: 6px;
     background: #e74c3c;
     color: white;
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     font-weight: 700;
-    padding: 2px 8px;
+    padding: 2px 5px;
     white-space: nowrap;
     animation: popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
   }
@@ -399,19 +439,27 @@
 
   /* ── Comment count badge on food item ── */
   .comment-badge {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 700;
+    background: var(--surface2);
+    color: var(--text-muted);
+    border-radius: 99px;
+    padding: 3px 7px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+  .comment-badge:hover { background: var(--border); }
+  .comment-badge.has-comments {
     background: var(--accent);
     color: white;
-    border-radius: 99px;
-    padding: 1px 6px;
-    min-width: 18px;
-    text-align: center;
-    line-height: 16px;
-    flex-shrink: 0;
-    transition: transform 0.2s;
+    border-color: transparent;
   }
-  .food-item:hover .comment-badge { transform: scale(1.1); }
+  .comment-badge.has-comments:hover { background: #e55a24; }
 
   /* ── Comment Panel (slide-in from right) ── */
   .comment-panel-backdrop {
@@ -436,6 +484,10 @@
   @keyframes slideInPanel {
     from { transform: translateX(100%); }
     to   { transform: translateX(0); }
+  }
+  @keyframes sheetUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
   }
   .panel-header {
     padding: 20px 20px 16px;
@@ -1026,21 +1078,35 @@ function buildItemEl(id, item) {
   div.id = 'fi_' + id;
   div.draggable = true;
   div.dataset.id = id;
+
+  // ── 桌機 drag ──
   div.addEventListener('dragstart', e => {
     e.dataTransfer.setData('text', id);
     div.classList.add('dragging');
   });
   div.addEventListener('dragend', () => div.classList.remove('dragging'));
-  addTouchDrag(div, id);
 
-  // Click on the chip body (not on link/del) → open comments
-  div.addEventListener('click', e => {
-    if (e.target.closest('a') || e.target.closest('.food-delete')) return;
-    if (div.classList.contains('dragging')) return;
-    if (touchDragId) return; // ignore click fired right after touch drag
-    openCommentPanel(id);
-  });
-  div.style.cursor = 'pointer';
+  // ── 頂部色條 ──
+  const tierColor = TIER_COLORS[item.tier || 'unranked'] || '#dfe6e9';
+  const bar = document.createElement('div');
+  bar.className = 'food-item-bar';
+  bar.style.background = tierColor;
+
+  // ── 店名（點 → Google Maps）──
+  const body = document.createElement('div');
+  body.className = 'food-item-body';
+  const link = document.createElement('a');
+  link.className = 'food-name';
+  link.href = item.url;
+  link.target = '_blank';
+  link.rel = 'noopener';
+  link.textContent = item.name;
+  link.ondragstart = e => e.preventDefault();
+  body.appendChild(link);
+
+  // ── 底部列 ──
+  const footer = document.createElement('div');
+  footer.className = 'food-item-footer';
 
   const av = document.createElement('div');
   av.className = 'food-avatar';
@@ -1048,30 +1114,37 @@ function buildItemEl(id, item) {
   av.textContent = initials(item.addedBy || '?');
   av.title = `${item.addedBy || '?'} 新增`;
 
-  const link = document.createElement('a');
-  link.className = 'food-name';
-  link.href = item.url;
-  link.target = '_blank';
-  link.textContent = item.name;
-  link.ondragstart = e => e.preventDefault();
+  const addedBy = document.createElement('span');
+  addedBy.className = 'food-added-by';
+  addedBy.textContent = item.addedBy || '?';
 
+  // 💬 badge — 點擊開評論
+  const commentCount = item.comments ? Object.keys(item.comments).length : 0;
+  const badge = document.createElement('button');
+  badge.className = 'comment-badge' + (commentCount > 0 ? ' has-comments' : '');
+  badge.id = `badge_${id}`;
+  badge.textContent = commentCount > 0 ? (commentCount > 9 ? '9+' : commentCount) + ' 💬' : '💬';
+  badge.title = '查看評論';
+  badge.onclick = e => { e.stopPropagation(); openCommentPanel(id); };
+  // 阻止 badge 上的觸控啟動拖曳
+  badge.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+  badge.addEventListener('touchend',   e => e.stopPropagation(), { passive: true });
+
+  // ✕ 刪除
   const del = document.createElement('button');
   del.className = 'food-delete';
   del.innerHTML = '×';
   del.title = '刪除';
   let delTimer = null;
-  del.onclick = (e) => {
+  del.onclick = e => {
     e.stopPropagation();
     if (del.classList.contains('confirm')) {
-      // 第二次點 → 真的刪
       clearTimeout(delTimer);
       deleteItem(id);
     } else {
-      // 第一次點 → 進入確認狀態
       del.classList.add('confirm');
       div.classList.add('confirm-delete');
-      del.textContent = '確認刪除？';
-      // 2.5 秒後自動取消
+      del.textContent = '確認?';
       delTimer = setTimeout(() => {
         del.classList.remove('confirm');
         div.classList.remove('confirm-delete');
@@ -1079,16 +1152,22 @@ function buildItemEl(id, item) {
       }, 2500);
     }
   };
+  del.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+  del.addEventListener('touchend',   e => e.stopPropagation(), { passive: true });
 
-  // Comment count badge
-  const commentCount = item.comments ? Object.keys(item.comments).length : 0;
-  const badge = document.createElement('span');
-  badge.className = 'comment-badge';
-  badge.id = `badge_${id}`;
-  badge.title = `${commentCount} 則評論`;
-  badge.textContent = commentCount > 0 ? (commentCount > 9 ? '9+' : commentCount) : '💬';
+  footer.append(av, addedBy, badge, del);
+  div.append(bar, body, footer);
 
-  div.append(av, link, badge, del);
+  // ── 手機觸控拖曳 ──
+  setupTouchDrag(div, id);
+
+  // ── 桌機點擊 → 評論 ──
+  div.addEventListener('click', e => {
+    if (e.target.closest('a') || e.target.closest('button')) return;
+    if (window.matchMedia('(hover: none)').matches) return;
+    openCommentPanel(id);
+  });
+
   return div;
 }
 
@@ -1266,113 +1345,206 @@ function commitTierChange(id, newTier) {
   }
 }
 
-// ── Touch Drag ──
-let touchDragging = null;   // the element being dragged
-let touchGhost = null;      // floating clone
-let touchDragId = null;     // item id
-let touchHoldTimer = null;  // long-press timer
-let lastHighlighted = null; // tier-row currently highlighted
+// ════════════════════════════════
+//  Tier Picker (手機點擊選等級)
+// ════════════════════════════════
+const TIERS = ['SSS','SS','S','A','B','C','D','ㄆㄨㄣ','unranked'];
+const TIER_LABEL = { SSS:'SSS', SS:'SS', S:'S', A:'A', B:'B', C:'C', D:'D', 'ㄆㄨㄣ':'ㄆㄨㄣ', unranked:'待分類' };
 
-function addTouchDrag(el, id) {
+let tierPickerItemId = null;
+
+function openTierPicker(id) {
+  tierPickerItemId = id;
+  const item = localItems[id];
+  if (!item) return;
+
+  // Build sheet
+  let sheet = document.getElementById('tierPickerSheet');
+  if (!sheet) {
+    const backdrop = document.createElement('div');
+    backdrop.id = 'tierPickerBackdrop';
+    backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:300;backdrop-filter:blur(2px);';
+    backdrop.onclick = closeTierPicker;
+
+    sheet = document.createElement('div');
+    sheet.id = 'tierPickerSheet';
+    sheet.style.cssText = `
+      position:fixed;left:0;right:0;bottom:0;
+      background:var(--surface);
+      border-radius:20px 20px 0 0;
+      z-index:301;
+      padding:0 0 env(safe-area-inset-bottom,16px);
+      box-shadow:0 -8px 40px rgba(0,0,0,0.15);
+      animation:sheetUp 0.28s cubic-bezier(0.34,1.2,0.64,1);
+    `;
+    document.body.appendChild(backdrop);
+    document.body.appendChild(sheet);
+  }
+
+  const currentTier = item.tier || 'unranked';
+
+  sheet.innerHTML = `
+    <div style="padding:12px 20px 4px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">移動到</div>
+        <div style="font-size:1rem;font-weight:800;margin-top:1px">${escHtml(item.name)}</div>
+      </div>
+      <button onclick="closeTierPicker()" style="background:var(--surface2);border:none;border-radius:50%;width:32px;height:32px;font-size:1.1rem;cursor:pointer;color:var(--text-muted)">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 16px">
+      ${TIERS.map(t => {
+        const color = TIER_COLORS[t] || '#dfe6e9';
+        const isCurrent = t === currentTier;
+        return `
+          <button onclick="pickTier('${t}')" style="
+            border:2.5px solid ${isCurrent ? color : 'transparent'};
+            background:${isCurrent ? color+'22' : 'var(--surface2)'};
+            border-radius:12px;padding:10px 4px;cursor:pointer;
+            font-family:inherit;font-weight:800;font-size:${t==='ㄆㄨㄣ'?'0.7rem':'1rem'};
+            color:${isCurrent ? color : 'var(--text)'};
+            display:flex;flex-direction:column;align-items:center;gap:4px;
+            transition:all 0.15s;position:relative;
+          ">
+            <span style="width:10px;height:10px;border-radius:50%;background:${color};display:block"></span>
+            ${TIER_LABEL[t]}
+            ${isCurrent ? '<span style="position:absolute;top:4px;right:4px;font-size:0.55rem;background:'+color+';color:white;padding:1px 4px;border-radius:99px;font-weight:700">現在</span>' : ''}
+          </button>`;
+      }).join('')}
+    </div>
+  `;
+
+  document.getElementById('tierPickerBackdrop').style.display = 'block';
+  sheet.style.display = 'block';
+}
+
+function closeTierPicker() {
+  const backdrop = document.getElementById('tierPickerBackdrop');
+  const sheet = document.getElementById('tierPickerSheet');
+  if (backdrop) backdrop.style.display = 'none';
+  if (sheet) sheet.style.display = 'none';
+  tierPickerItemId = null;
+}
+
+function pickTier(tier) {
+  if (!tierPickerItemId) return;
+  commitTierChange(tierPickerItemId, tier);
+  closeTierPicker();
+  showToast(`已移到 ${TIER_LABEL[tier]}`);
+}
+
+// ════════════════════════════════
+//  Touch Drag (手機拖曳)
+// ════════════════════════════════
+let _touchDragEl   = null;
+let _touchDragId   = null;
+let _touchGhost    = null;
+let _touchHoldTimer = null;
+let _touchLastRow  = null;
+let _touchStartX   = 0;
+let _touchStartY   = 0;
+let _touchDragging = false;
+
+function setupTouchDrag(el, id) {
   el.addEventListener('touchstart', e => {
-    // long-press 300ms to start drag (avoids interfering with tap/scroll)
-    touchHoldTimer = setTimeout(() => {
-      startTouchDrag(e, el, id);
-    }, 300);
+    const t = e.touches[0];
+    _touchStartX = t.clientX;
+    _touchStartY = t.clientY;
+    _touchDragging = false;
+
+    // 長按 350ms 啟動拖曳
+    _touchHoldTimer = setTimeout(() => {
+      _startTouchDrag(e, el, id);
+    }, 350);
   }, { passive: true });
 
   el.addEventListener('touchmove', e => {
-    if (!touchDragging) { clearTimeout(touchHoldTimer); return; }
-    e.preventDefault();
-    moveTouchDrag(e);
+    const t = e.touches[0];
+    const dx = Math.abs(t.clientX - _touchStartX);
+    const dy = Math.abs(t.clientY - _touchStartY);
+
+    if (!_touchDragging) {
+      // 還沒啟動拖曳，如果移動超過 8px 就取消長按（讓頁面正常捲動）
+      if (dx > 8 || dy > 8) clearTimeout(_touchHoldTimer);
+      return;
+    }
+
+    e.preventDefault(); // 拖曳中阻止頁面捲動
+    _moveTouchDrag(t);
   }, { passive: false });
 
   el.addEventListener('touchend', e => {
-    clearTimeout(touchHoldTimer);
-    if (!touchDragging) return;
-    endTouchDrag(e);
+    clearTimeout(_touchHoldTimer);
+    if (_touchDragging) _endTouchDrag(e);
   });
 
   el.addEventListener('touchcancel', () => {
-    clearTimeout(touchHoldTimer);
-    cancelTouchDrag();
+    clearTimeout(_touchHoldTimer);
+    _cancelTouchDrag();
   });
 }
 
-function startTouchDrag(e, el, id) {
-  touchDragging = el;
-  touchDragId = id;
+function _startTouchDrag(e, el, id) {
+  _touchDragging = true;
+  _touchDragEl = el;
+  _touchDragId = id;
   el.classList.add('dragging');
+  if (navigator.vibrate) navigator.vibrate(35);
 
-  // Vibrate if supported
-  if (navigator.vibrate) navigator.vibrate(30);
-
-  // Create ghost clone
   const rect = el.getBoundingClientRect();
-  touchGhost = el.cloneNode(true);
-  touchGhost.style.cssText = `
-    position: fixed;
-    left: ${rect.left}px;
-    top: ${rect.top}px;
-    width: ${rect.width}px;
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.85;
-    transform: scale(1.08);
-    transition: transform 0.1s;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  _touchGhost = el.cloneNode(true);
+  _touchGhost.style.cssText = `
+    position:fixed;
+    left:${rect.left}px; top:${rect.top}px;
+    width:${rect.width}px;
+    pointer-events:none;
+    z-index:9999;
+    opacity:0.88;
+    transform:scale(1.06) rotate(2deg);
+    box-shadow:0 12px 32px rgba(0,0,0,0.22);
+    border-radius:12px;
+    transition:transform 0.1s;
   `;
-  document.body.appendChild(touchGhost);
+  document.body.appendChild(_touchGhost);
 }
 
-function moveTouchDrag(e) {
-  const touch = e.touches[0];
-  const rect = touchDragging.getBoundingClientRect();
-  const offsetX = rect.width / 2;
-  const offsetY = rect.height / 2;
+function _moveTouchDrag(touch) {
+  if (!_touchGhost) return;
+  const rect = _touchDragEl.getBoundingClientRect();
+  _touchGhost.style.left = (touch.clientX - rect.width / 2) + 'px';
+  _touchGhost.style.top  = (touch.clientY - rect.height / 2) + 'px';
 
-  touchGhost.style.left = (touch.clientX - offsetX) + 'px';
-  touchGhost.style.top  = (touch.clientY - offsetY) + 'px';
+  // 高亮目標 tier row
+  _touchGhost.style.display = 'none';
+  const below = document.elementFromPoint(touch.clientX, touch.clientY);
+  _touchGhost.style.display = '';
 
-  // Highlight tier row under finger
-  touchGhost.style.display = 'none';
-  const elBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-  touchGhost.style.display = '';
-
-  const tierRow = elBelow ? elBelow.closest('.tier-row') : null;
-
-  if (lastHighlighted && lastHighlighted !== tierRow) {
-    lastHighlighted.classList.remove('drag-over');
-  }
-  if (tierRow) {
-    tierRow.classList.add('drag-over');
-    lastHighlighted = tierRow;
-  }
+  const row = below ? below.closest('.tier-row') : null;
+  if (_touchLastRow && _touchLastRow !== row) _touchLastRow.classList.remove('drag-over');
+  if (row) { row.classList.add('drag-over'); _touchLastRow = row; }
 }
 
-function endTouchDrag(e) {
+function _endTouchDrag(e) {
   const touch = e.changedTouches[0];
+  if (_touchGhost) _touchGhost.style.display = 'none';
+  const below = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (_touchGhost) _touchGhost.style.display = '';
 
-  // Find drop target
-  touchGhost.style.display = 'none';
-  const elBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-  touchGhost.style.display = '';
+  const row = below ? below.closest('.tier-row') : null;
+  if (row) commitTierChange(_touchDragId, row.dataset.tier || 'unranked');
 
-  const tierRow = elBelow ? elBelow.closest('.tier-row') : null;
-  if (tierRow) {
-    const newTier = tierRow.dataset.tier || 'unranked';
-    commitTierChange(touchDragId, newTier);
-  }
-
-  cancelTouchDrag();
+  _cancelTouchDrag();
 }
 
-function cancelTouchDrag() {
-  if (touchGhost) { touchGhost.remove(); touchGhost = null; }
-  if (touchDragging) { touchDragging.classList.remove('dragging'); touchDragging = null; }
-  if (lastHighlighted) { lastHighlighted.classList.remove('drag-over'); lastHighlighted = null; }
-  touchDragId = null;
+function _cancelTouchDrag() {
+  if (_touchGhost)   { _touchGhost.remove();                       _touchGhost = null; }
+  if (_touchDragEl)  { _touchDragEl.classList.remove('dragging');  _touchDragEl = null; }
+  if (_touchLastRow) { _touchLastRow.classList.remove('drag-over'); _touchLastRow = null; }
+  _touchDragId   = null;
+  _touchDragging = false;
 }
+
+// 保留舊名相容
+function addTouchDrag(el, id) { setupTouchDrag(el, id); }
 
 // ════════════════════════════════
 //  Comment Panel
