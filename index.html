@@ -378,6 +378,25 @@
   }
   .food-delete:hover { background: #fee; color: #e74c3c; }
 
+  /* delete confirm state */
+  .food-item.confirm-delete {
+    border-color: #e74c3c;
+    background: #fff5f5;
+    box-shadow: 0 0 0 2px rgba(231,76,60,0.15);
+  }
+  .food-delete.confirm {
+    width: auto;
+    border-radius: 99px;
+    background: #e74c3c;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    white-space: nowrap;
+    animation: popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .food-delete.confirm:hover { background: #c0392b; }
+
   /* ── Comment count badge on food item ── */
   .comment-badge {
     font-size: 0.65rem;
@@ -1040,7 +1059,26 @@ function buildItemEl(id, item) {
   del.className = 'food-delete';
   del.innerHTML = '×';
   del.title = '刪除';
-  del.onclick = () => deleteItem(id);
+  let delTimer = null;
+  del.onclick = (e) => {
+    e.stopPropagation();
+    if (del.classList.contains('confirm')) {
+      // 第二次點 → 真的刪
+      clearTimeout(delTimer);
+      deleteItem(id);
+    } else {
+      // 第一次點 → 進入確認狀態
+      del.classList.add('confirm');
+      div.classList.add('confirm-delete');
+      del.textContent = '確認刪除？';
+      // 2.5 秒後自動取消
+      delTimer = setTimeout(() => {
+        del.classList.remove('confirm');
+        div.classList.remove('confirm-delete');
+        del.innerHTML = '×';
+      }, 2500);
+    }
+  };
 
   // Comment count badge
   const commentCount = item.comments ? Object.keys(item.comments).length : 0;
