@@ -6,6 +6,15 @@
 <title>🍜 美食 Tier List</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-GFMXMZXRG4"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-GFMXMZXRG4');
+</script>
+
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -13,14 +22,15 @@
 
   // ⚠️ 在這裡貼上你的 Firebase 設定
   const firebaseConfig = {
-    apiKey: "AIzaSyBtTYi_zNozxEi3xbWsgQ7xYO28OjKfz9w",
-    authDomain: "food-tierlist.firebaseapp.com",
-    databaseURL: "https://food-tierlist-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "food-tierlist",
-    storageBucket: "food-tierlist.firebasestorage.app",
-    messagingSenderId: "158661570879",
-    appId: "1:158661570879:web:8729dd240fa04d5fc0638a"
-  };
+	  apiKey: "AIzaSyBtTYi_zNozxEi3xbWsgQ7xYO28OjKfz9w",
+	  authDomain: "food-tierlist.firebaseapp.com",
+	  databaseURL: "https://food-tierlist-default-rtdb.asia-southeast1.firebasedatabase.app",
+	  projectId: "food-tierlist",
+	  storageBucket: "food-tierlist.firebasestorage.app",
+	  messagingSenderId: "158661570879",
+	  appId: "1:158661570879:web:8729dd240fa04d5fc0638a",
+	  measurementId: "G-GFMXMZXRG4"
+};
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
