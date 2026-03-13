@@ -958,11 +958,13 @@ function buildItemEl(id, item) {
     div.classList.add('dragging');
   });
   div.addEventListener('dragend', () => div.classList.remove('dragging'));
+  addTouchDrag(div, id);
 
   // Click on the chip body (not on link/del) → open comments
   div.addEventListener('click', e => {
     if (e.target.closest('a') || e.target.closest('.food-delete')) return;
     if (div.classList.contains('dragging')) return;
+    if (touchDragId) return; // ignore click fired right after touch drag
     openCommentPanel(id);
   });
   div.style.cursor = 'pointer';
@@ -1068,7 +1070,7 @@ function deleteItem(id) {
 }
 
 // ════════════════════════════════
-//  Drag & Drop
+//  Drag & Drop (Mouse + Touch)
 // ════════════════════════════════
 function allowDrop(e) { e.preventDefault(); }
 
@@ -1096,16 +1098,125 @@ function drop(e) {
 
   const tierRow = targetZone.closest('.tier-row');
   const newTier = tierRow ? tierRow.dataset.tier : 'unranked';
-
   tierRow && tierRow.classList.remove('drag-over');
+  commitTierChange(id, newTier);
+}
 
-  // Update Firebase
+function commitTierChange(id, newTier) {
   if (firebaseReady && !id.startsWith('local_')) {
     dbUpdate(dbRef(db, `items/${id}`), { tier: newTier });
   } else {
     if (localItems[id]) localItems[id].tier = newTier;
     renderAll();
   }
+}
+
+// ── Touch Drag ──
+let touchDragging = null;   // the element being dragged
+let touchGhost = null;      // floating clone
+let touchDragId = null;     // item id
+let touchHoldTimer = null;  // long-press timer
+let lastHighlighted = null; // tier-row currently highlighted
+
+function addTouchDrag(el, id) {
+  el.addEventListener('touchstart', e => {
+    // long-press 300ms to start drag (avoids interfering with tap/scroll)
+    touchHoldTimer = setTimeout(() => {
+      startTouchDrag(e, el, id);
+    }, 300);
+  }, { passive: true });
+
+  el.addEventListener('touchmove', e => {
+    if (!touchDragging) { clearTimeout(touchHoldTimer); return; }
+    e.preventDefault();
+    moveTouchDrag(e);
+  }, { passive: false });
+
+  el.addEventListener('touchend', e => {
+    clearTimeout(touchHoldTimer);
+    if (!touchDragging) return;
+    endTouchDrag(e);
+  });
+
+  el.addEventListener('touchcancel', () => {
+    clearTimeout(touchHoldTimer);
+    cancelTouchDrag();
+  });
+}
+
+function startTouchDrag(e, el, id) {
+  touchDragging = el;
+  touchDragId = id;
+  el.classList.add('dragging');
+
+  // Vibrate if supported
+  if (navigator.vibrate) navigator.vibrate(30);
+
+  // Create ghost clone
+  const rect = el.getBoundingClientRect();
+  touchGhost = el.cloneNode(true);
+  touchGhost.style.cssText = `
+    position: fixed;
+    left: ${rect.left}px;
+    top: ${rect.top}px;
+    width: ${rect.width}px;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.85;
+    transform: scale(1.08);
+    transition: transform 0.1s;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  `;
+  document.body.appendChild(touchGhost);
+}
+
+function moveTouchDrag(e) {
+  const touch = e.touches[0];
+  const rect = touchDragging.getBoundingClientRect();
+  const offsetX = rect.width / 2;
+  const offsetY = rect.height / 2;
+
+  touchGhost.style.left = (touch.clientX - offsetX) + 'px';
+  touchGhost.style.top  = (touch.clientY - offsetY) + 'px';
+
+  // Highlight tier row under finger
+  touchGhost.style.display = 'none';
+  const elBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  touchGhost.style.display = '';
+
+  const tierRow = elBelow ? elBelow.closest('.tier-row') : null;
+
+  if (lastHighlighted && lastHighlighted !== tierRow) {
+    lastHighlighted.classList.remove('drag-over');
+  }
+  if (tierRow) {
+    tierRow.classList.add('drag-over');
+    lastHighlighted = tierRow;
+  }
+}
+
+function endTouchDrag(e) {
+  const touch = e.changedTouches[0];
+
+  // Find drop target
+  touchGhost.style.display = 'none';
+  const elBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  touchGhost.style.display = '';
+
+  const tierRow = elBelow ? elBelow.closest('.tier-row') : null;
+  if (tierRow) {
+    const newTier = tierRow.dataset.tier || 'unranked';
+    commitTierChange(touchDragId, newTier);
+  }
+
+  cancelTouchDrag();
+}
+
+function cancelTouchDrag() {
+  if (touchGhost) { touchGhost.remove(); touchGhost = null; }
+  if (touchDragging) { touchDragging.classList.remove('dragging'); touchDragging = null; }
+  if (lastHighlighted) { lastHighlighted.classList.remove('drag-over'); lastHighlighted = null; }
+  touchDragId = null;
 }
 
 // ════════════════════════════════
