@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍜 美食 Tier List</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ⚠️ 在這裡貼上你的 Firebase 設定
+  const firebaseConfig = {
+    apiKey: "AIzaSyBtTYi_zNozxEi3xbWsgQ7xYO28OjKfz9w",
+    authDomain: "food-tierlist.firebaseapp.com",
+    databaseURL: "https://food-tierlist-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "food-tierlist",
+    storageBucket: "food-tierlist.firebasestorage.app",
+    messagingSenderId: "158661570879",
+    appId: "1:158661570879:web:8729dd240fa04d5fc0638a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // 把 db 跟 firebase functions 掛到 window 讓主程式用
+  window._db = db;
+  window._dbRef = ref;
+  window._dbSet = set;
+  window._dbPush = push;
+  window._dbOnValue = onValue;
+  window._dbRemove = remove;
+  window._dbUpdate = update;
+
+  // Firebase 初始化完成後啟動 App
+  document.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #e2e0d8;
+    --text: #1a1a1a;
+    --text-muted: #888;
+    --accent: #ff6b35;
+    --accent2: #ffd166;
+    --radius: 14px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    
+    --sss: #ff4757;
+    --ss: #ff7f50;
+    --s:  #ffa502;
+    --a:  #2ed573;
+    --b:  #1e90ff;
+    --c:  #a29bfe;
+    --d:  #b2bec3;
+    --pun: #6d4c41;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .header-logo {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-logo span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+
+  /* ── User Badge ── */
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 6px 14px 6px 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .user-badge:hover { background: var(--border); }
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  /* ── Online Users ── */
+  .online-users {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .online-dot {
+    width: 7px; height: 7px;
+    background: #2ed573;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .avatar-stack {
+    display: flex;
+    margin-left: 4px;
+  }
+  .avatar-stack .avatar {
+    width: 24px; height: 24px;
+    border: 2px solid var(--surface);
+    margin-left: -6px;
+    font-size: 0.65rem;
+  }
+  .avatar-stack .avatar:first-child { margin-left: 0; }
+
+  /* ── Main Layout ── */
+  .main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  /* ── Input Area ── */
+  .add-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .add-card-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .input-row {
+    display: flex;
+    gap: 10px;
+  }
+  .url-input {
+    flex: 1;
+    padding: 11px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: var(--surface2);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .url-input:focus { border-color: var(--accent); background: white; }
+  .url-input::placeholder { color: var(--text-muted); }
+  .add-btn {
+    padding: 11px 22px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .add-btn:hover { background: #e55a24; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,107,53,0.35); }
+  .add-btn:active { transform: translateY(0); }
+
+  /* ── Tier List ── */
+  .tier-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tier-row {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    min-height: 80px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s;
+  }
+  .tier-row.drag-over {
+    box-shadow: 0 0 0 2px var(--accent), var(--shadow-lg);
+  }
+
+  .tier-label {
+    width: 80px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: rgba(0,0,0,0.18);
+    position: relative;
+  }
+  .tier-label::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 12px; bottom: 12px;
+    width: 1px;
+    background: rgba(0,0,0,0.08);
+  }
+
+  .tier-sss { background: var(--sss); }
+  .tier-ss  { background: var(--ss);  }
+  .tier-s   { background: var(--s);   }
+  .tier-a   { background: var(--a);   }
+  .tier-b   { background: var(--b);   }
+  .tier-c   { background: var(--c);   }
+  .tier-d   { background: var(--d);   }
+  .tier-pun { background: var(--pun); color: rgba(255,255,255,0.5); }
+  .tier-unranked { background: #dfe6e9; }
+
+  .tier-items {
+    flex: 1;
+    padding: 12px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+    min-height: 80px;
+  }
+
+  /* ── Food Item ── */
+  .food-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 6px 12px 6px 6px;
+    cursor: grab;
+    transition: all 0.15s;
+    user-select: none;
+    max-width: 260px;
+    animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .food-item:hover {
+    background: white;
+    border-color: #ccc;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+  }
+  .food-item:active { cursor: grabbing; transform: scale(0.97); }
+  .food-item.dragging { opacity: 0.4; }
+
+  .food-avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    title: '';
+  }
+  .food-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+  }
+  .food-name:hover { color: var(--accent); }
+  .food-delete {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .food-delete:hover { background: #fee; color: #e74c3c; }
+
+  /* ── Comment count badge on food item ── */
+  .comment-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: var(--accent);
+    color: white;
+    border-radius: 99px;
+    padding: 1px 6px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 16px;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+  .food-item:hover .comment-badge { transform: scale(1.1); }
+
+  /* ── Comment Panel (slide-in from right) ── */
+  .comment-panel-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.25);
+    z-index: 200;
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.2s;
+  }
+  .comment-panel {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 380px;
+    max-width: 100vw;
+    background: var(--surface);
+    box-shadow: -8px 0 40px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    z-index: 201;
+    animation: slideInPanel 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+  @keyframes slideInPanel {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  .panel-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .panel-title-block { flex: 1; min-width: 0; }
+  .panel-restaurant-name {
+    font-size: 1rem;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+  .panel-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-tier-badge {
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-weight: 700;
+    font-size: 0.7rem;
+    color: rgba(0,0,0,0.5);
+  }
+  .panel-map-link {
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .panel-map-link:hover { text-decoration: underline; }
+  .panel-close {
+    width: 32px; height: 32px;
+    border: none; background: var(--surface2);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .panel-close:hover { background: #fee; color: #e74c3c; }
+
+  /* Comment list */
+  .comment-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .comment-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    padding: 40px 0;
+  }
+  .comment-empty .empty-icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+
+  .comment-item {
+    display: flex;
+    gap: 10px;
+    animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .comment-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .comment-body { flex: 1; min-width: 0; }
+  .comment-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .comment-author {
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .comment-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+  .comment-text {
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--text);
+    background: var(--surface2);
+    border-radius: 4px 12px 12px 12px;
+    padding: 8px 12px;
+    word-break: break-word;
+  }
+  .comment-delete-btn {
+    background: none;
+    border: none;
+    color: #ddd;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0;
+    margin-top: 4px;
+    transition: color 0.15s;
+  }
+  .comment-delete-btn:hover { color: #e74c3c; }
+
+  /* Comment input */
+  .panel-input-area {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .comment-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .comment-textarea {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    background: var(--surface2);
+    color: var(--text);
+    outline: none;
+    resize: none;
+    min-height: 42px;
+    max-height: 120px;
+    line-height: 1.5;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .comment-textarea:focus { border-color: var(--accent); background: white; }
+  .comment-textarea::placeholder { color: var(--text-muted); }
+  .comment-send-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--accent);
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .comment-send-btn:hover { background: #e55a24; transform: scale(1.05); }
+  .comment-send-btn:active { transform: scale(0.95); }
+  .comment-send-btn svg { pointer-events: none; }
+
+  /* ── Unranked Section ── */
+  .unranked-section {
+    margin-top: 20px;
+  }
+  .unranked-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .unranked-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .unranked-row {
+    min-height: 90px;
+  }
+
+  /* ── Modal ── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    width: 360px;
+    max-width: 90vw;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; }
+  .modal p { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 20px; line-height: 1.5; }
+  .modal input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .modal input:focus { border-color: var(--accent); }
+  .modal-btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .modal-btn:hover { background: #e55a24; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1a1a1a;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    z-index: 9999;
+    animation: slideInRight 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes slideInRight {
+    from { transform: translateX(60px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* ── Config Warning ── */
+  .config-warning {
+    background: #fff9e6;
+    border: 1.5px solid #ffd166;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .config-warning strong { color: #b8860b; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .header { padding: 14px 16px; }
+    .main { padding: 16px 12px 40px; }
+    .tier-label { width: 52px; font-size: 1.2rem; }
+    .input-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="header">
+  <div class="header-logo">🍜 <span>美食</span> Tier List</div>
+  <div class="header-right">
+    <div class="online-users" id="onlineIndicator">
+      <div class="online-dot"></div>
+      <span id="onlineCount">0 人在線</span>
+      <div class="avatar-stack" id="onlineAvatars"></div>
+    </div>
+    <div class="user-badge" id="userBadge" onclick="changeUser()">
+      <div class="avatar" id="headerAvatar" style="background:#ccc">?</div>
+      <span id="headerName">設定暱稱</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── Main ── -->
+<main class="main">
+
+  <div class="config-warning" id="configWarning">
+    ⚠️ <strong>設定 Firebase 才能多人使用！</strong>請參考下方的 <code>SETUP.md</code> 說明，把 Firebase 設定填入 index.html，然後部署到 GitHub Pages。
+  </div>
+
+  <!-- Add Card -->
+  <div class="add-card">
+    <div class="add-card-title">➕ 新增餐廳</div>
+    <div class="input-row">
+      <input class="url-input" id="mapUrl" type="text" placeholder="貼上 Google Maps 連結（長網址或短網址皆可）..." onkeydown="if(event.key==='Enter')addRestaurant()">
+      <button class="add-btn" onclick="addRestaurant()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        加入
+      </button>
+    </div>
+  </div>
+
+  <!-- Tier List -->
+  <div class="tier-container" id="tierContainer">
+    <div class="tier-row" data-tier="SSS">
+      <div class="tier-label tier-sss">SSS</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+    </div>
+    <div class="tier-row" data-tier="SS">
+      <div class="tier-label tier-ss">SS</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+    </div>
+    <div class="tier-row" data-tier="S">
+      <div class="tier-label tier-s">S</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+    </div>
+    <div class="tier-row" data-tier="A">
+      <div class="tier-label tier-a">A</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+    </div>
+    <div class="tier-row" data-tier="B">
+      <div class="tier-label tier-b">B</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+    </div>
+    <div class="tier-row" data-tier="C">
+      <div class="tier-label tier-c">C</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+    </div>
+    <div class="tier-row" data-tier="D">
+      <div class="tier-label tier-d">D</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+    </div>
+    <div class="tier-row" data-tier="ㄆㄨㄣ">
+      <div class="tier-label tier-pun" style="font-size:1.1rem;">ㄆㄨㄣ</div>
+      <div class="tier-items" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+    </div>
+  </div>
+
+  <!-- Unranked -->
+  <div class="unranked-section">
+    <div class="unranked-label">待分類（新加入）</div>
+    <div class="tier-row unranked-row" data-tier="unranked">
+      <div class="tier-label tier-unranked" style="font-size:0.85rem;color:#999;writing-mode:vertical-rl;letter-spacing:2px;">待分類</div>
+      <div class="tier-items" id="unranked" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)" style="min-height:90px;"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Comment Panel ── -->
+<div id="commentPanelBackdrop" class="comment-panel-backdrop" style="display:none" onclick="closeCommentPanel()"></div>
+<div id="commentPanel" class="comment-panel" style="display:none">
+  <div class="panel-header">
+    <div class="panel-title-block">
+      <div class="panel-restaurant-name" id="panelName">—</div>
+      <div class="panel-meta">
+        <span class="panel-tier-badge" id="panelTierBadge">—</span>
+        <a class="panel-map-link" id="panelMapLink" href="#" target="_blank">📍 在 Google Maps 查看</a>
+      </div>
+    </div>
+    <button class="panel-close" onclick="closeCommentPanel()">✕</button>
+  </div>
+  <div class="comment-list" id="commentList">
+    <div class="comment-empty"><span class="empty-icon">💬</span>還沒有評論，來留第一則！</div>
+  </div>
+  <div class="panel-input-area">
+    <div class="comment-input-row">
+      <textarea class="comment-textarea" id="commentTextarea" placeholder="分享你的感想..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendComment();}"
+        oninput="autoResize(this)"></textarea>
+      <button class="comment-send-btn" onclick="sendComment()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Name Modal ── -->
+<div class="modal-backdrop" id="nameModal">
+  <div class="modal">
+    <h2>👋 你是哪位？</h2>
+    <p>輸入你的暱稱，讓朋友知道是誰新增了餐廳、誰在線上！</p>
+    <input type="text" id="nameInput" placeholder="輸入暱稱..." maxlength="12" onkeydown="if(event.key==='Enter')saveName()">
+    <button class="modal-btn" onclick="saveName()">開始使用 🎉</button>
+  </div>
+</div>
+
+<!-- ── Name Input Modal (manual restaurant name) ── -->
+<div class="modal-backdrop" id="namePromptModal" style="display:none">
+  <div class="modal">
+    <h2>📍 輸入店名</h2>
+    <p>無法從網址自動解析店名（短連結），請手動輸入：</p>
+    <input type="text" id="manualNameInput" placeholder="例：鼎泰豐信義店" maxlength="30" onkeydown="if(event.key==='Enter')confirmManualName()">
+    <button class="modal-btn" onclick="confirmManualName()">確認新增</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════
+//  Color Palette for Avatars
+// ════════════════════════════════
+const COLORS = [
+  '#ff6b35','#ff4757','#ffa502','#2ed573',
+  '#1e90ff','#a29bfe','#fd79a8','#00b894',
+  '#e17055','#6c5ce7','#00cec9','#fdcb6e'
+];
+
+function stringToColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return COLORS[Math.abs(hash) % COLORS.length];
+}
+
+function initials(name) {
+  return name ? name.slice(0,2).toUpperCase() : '?';
+}
+
+// ════════════════════════════════
+//  User Identity
+// ════════════════════════════════
+let currentUser = null;
+let pendingUrl = null;
+
+function loadUser() {
+  const saved = localStorage.getItem('tierlist_user');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    applyUser();
+    document.getElementById('nameModal').style.display = 'none';
+  }
+}
+
+function applyUser() {
+  document.getElementById('headerName').textContent = currentUser.name;
+  const av = document.getElementById('headerAvatar');
+  av.style.background = currentUser.color;
+  av.textContent = initials(currentUser.name);
+  updateOnlinePresence();
+}
+
+function saveName() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) return;
+  currentUser = { name, color: stringToColor(name), id: Date.now().toString(36) };
+  localStorage.setItem('tierlist_user', JSON.stringify(currentUser));
+  document.getElementById('nameModal').style.display = 'none';
+  applyUser();
+  if (pendingUrl) { doAddRestaurant(pendingUrl); pendingUrl = null; }
+}
+
+function changeUser() {
+  document.getElementById('nameInput').value = currentUser ? currentUser.name : '';
+  document.getElementById('nameModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('nameInput').focus(), 100);
+}
+
+// ════════════════════════════════
+//  Firebase helpers (called after ready)
+// ════════════════════════════════
+let db, dbRef, dbSet, dbPush, dbOnValue, dbRemove, dbUpdate;
+let firebaseReady = false;
+
+document.addEventListener('firebase-ready', () => {
+  db = window._db;
+  dbRef = window._dbRef;
+  dbSet = window._dbSet;
+  dbPush = window._dbPush;
+  dbOnValue = window._dbOnValue;
+  dbRemove = window._dbRemove;
+  dbUpdate = window._dbUpdate;
+  firebaseReady = true;
+
+  // Check if config is real
+  try {
+    const testRef = dbRef(db, '.info/connected');
+    dbOnValue(testRef, snap => {
+      if (snap.val() === true) {
+        document.getElementById('configWarning').style.display = 'none';
+      }
+    });
+  } catch(e) {}
+
+  listenItems();
+  listenPresence();
+});
+
+// ════════════════════════════════
+//  Presence (online users)
+// ════════════════════════════════
+function updateOnlinePresence() {
+  if (!firebaseReady || !currentUser) return;
+  const presRef = dbRef(db, `presence/${currentUser.id}`);
+  dbSet(presRef, { name: currentUser.name, color: currentUser.color, ts: Date.now() });
+  // Clean up on disconnect
+  window.addEventListener('beforeunload', () => dbRemove(presRef));
+  // Refresh every 20s
+  setInterval(() => dbSet(presRef, { name: currentUser.name, color: currentUser.color, ts: Date.now() }), 20000);
+}
+
+function listenPresence() {
+  if (!firebaseReady) return;
+  dbOnValue(dbRef(db, 'presence'), snap => {
+    const all = snap.val() || {};
+    const now = Date.now();
+    // Keep only users active in last 60s
+    const active = Object.values(all).filter(u => (now - u.ts) < 60000);
+    document.getElementById('onlineCount').textContent = `${active.length} 人在線`;
+    const stack = document.getElementById('onlineAvatars');
+    stack.innerHTML = active.slice(0, 5).map(u =>
+      `<div class="avatar" style="background:${u.color}" title="${u.name}">${initials(u.name)}</div>`
+    ).join('');
+  });
+}
+
+// ════════════════════════════════
+//  Items (Realtime sync)
+// ════════════════════════════════
+let localItems = {}; // id -> {name, url, tier, addedBy, addedByColor}
+
+function listenItems() {
+  dbOnValue(dbRef(db, 'items'), snap => {
+    localItems = snap.val() || {};
+    renderAll();
+    // If comment panel is open, refresh the tier badge in header
+    if (currentPanelItemId && localItems[currentPanelItemId]) {
+      const item = localItems[currentPanelItemId];
+      const tier = item.tier || 'unranked';
+      const badge = document.getElementById('panelTierBadge');
+      if (badge) {
+        badge.textContent = tier === 'unranked' ? '待分類' : tier;
+        badge.style.background = TIER_COLORS[tier] || '#ddd';
+      }
+    }
+  });
+}
+
+function renderAll() {
+  // Clear all tier-items
+  document.querySelectorAll('.tier-items').forEach(el => el.innerHTML = '');
+
+  Object.entries(localItems).forEach(([id, item]) => {
+    const el = buildItemEl(id, item);
+    const tierEl = getTierEl(item.tier || 'unranked');
+    if (tierEl) tierEl.appendChild(el);
+  });
+}
+
+function getTierEl(tier) {
+  const row = document.querySelector(`.tier-row[data-tier="${tier}"]`);
+  return row ? row.querySelector('.tier-items') : document.getElementById('unranked');
+}
+
+function buildItemEl(id, item) {
+  const div = document.createElement('div');
+  div.className = 'food-item';
+  div.id = 'fi_' + id;
+  div.draggable = true;
+  div.dataset.id = id;
+  div.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text', id);
+    div.classList.add('dragging');
+  });
+  div.addEventListener('dragend', () => div.classList.remove('dragging'));
+
+  // Click on the chip body (not on link/del) → open comments
+  div.addEventListener('click', e => {
+    if (e.target.closest('a') || e.target.closest('.food-delete')) return;
+    if (div.classList.contains('dragging')) return;
+    openCommentPanel(id);
+  });
+  div.style.cursor = 'pointer';
+
+  const av = document.createElement('div');
+  av.className = 'food-avatar';
+  av.style.background = item.addedByColor || '#aaa';
+  av.textContent = initials(item.addedBy || '?');
+  av.title = `${item.addedBy || '?'} 新增`;
+
+  const link = document.createElement('a');
+  link.className = 'food-name';
+  link.href = item.url;
+  link.target = '_blank';
+  link.textContent = item.name;
+  link.ondragstart = e => e.preventDefault();
+
+  const del = document.createElement('button');
+  del.className = 'food-delete';
+  del.innerHTML = '×';
+  del.title = '刪除';
+  del.onclick = () => deleteItem(id);
+
+  // Comment count badge
+  const commentCount = item.comments ? Object.keys(item.comments).length : 0;
+  const badge = document.createElement('span');
+  badge.className = 'comment-badge';
+  badge.id = `badge_${id}`;
+  badge.title = `${commentCount} 則評論`;
+  badge.textContent = commentCount > 0 ? (commentCount > 9 ? '9+' : commentCount) : '💬';
+
+  div.append(av, link, badge, del);
+  return div;
+}
+
+// ════════════════════════════════
+//  Add Restaurant
+// ════════════════════════════════
+function extractNameFromUrl(url) {
+  try {
+    const m = url.match(/\/place\/([^/?]+)/);
+    if (m) return decodeURIComponent(m[1].replace(/\+/g, ' '));
+  } catch(e) {}
+  return null;
+}
+
+function addRestaurant() {
+  if (!currentUser) { pendingUrl = document.getElementById('mapUrl').value.trim(); changeUser(); return; }
+  const url = document.getElementById('mapUrl').value.trim();
+  if (!url) { showToast('請貼上 Google Maps 連結'); return; }
+  const name = extractNameFromUrl(url);
+  if (name) {
+    doAddRestaurant(url, name);
+  } else {
+    // Need manual name
+    pendingUrl = url;
+    document.getElementById('manualNameInput').value = '';
+    document.getElementById('namePromptModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('manualNameInput').focus(), 100);
+  }
+}
+
+function confirmManualName() {
+  const name = document.getElementById('manualNameInput').value.trim();
+  if (!name) return;
+  document.getElementById('namePromptModal').style.display = 'none';
+  doAddRestaurant(pendingUrl, name);
+  pendingUrl = null;
+}
+
+function doAddRestaurant(url, name) {
+  if (!firebaseReady) {
+    // Offline mode - just render locally
+    const id = 'local_' + Date.now();
+    localItems[id] = { name, url, tier: 'unranked', addedBy: currentUser.name, addedByColor: currentUser.color };
+    renderAll();
+    showToast(`已新增：${name}`);
+    document.getElementById('mapUrl').value = '';
+    return;
+  }
+
+  const newRef = dbPush(dbRef(db, 'items'));
+  dbSet(newRef, {
+    name,
+    url,
+    tier: 'unranked',
+    addedBy: currentUser.name,
+    addedByColor: currentUser.color,
+    createdAt: Date.now()
+  }).then(() => {
+    showToast(`✅ 已新增：${name}`);
+    document.getElementById('mapUrl').value = '';
+  });
+}
+
+function deleteItem(id) {
+  if (firebaseReady) {
+    dbRemove(dbRef(db, `items/${id}`));
+  } else {
+    delete localItems[id];
+    renderAll();
+  }
+}
+
+// ════════════════════════════════
+//  Drag & Drop
+// ════════════════════════════════
+function allowDrop(e) { e.preventDefault(); }
+
+function dragEnter(e) {
+  const zone = e.currentTarget;
+  zone.parentElement.classList.add('drag-over');
+}
+function dragLeave(e) {
+  const zone = e.currentTarget;
+  if (!zone.contains(e.relatedTarget)) {
+    zone.parentElement.classList.remove('drag-over');
+  }
+}
+
+function drop(e) {
+  e.preventDefault();
+  const id = e.dataTransfer.getData('text');
+  if (!id) return;
+
+  let targetZone = e.target;
+  while (targetZone && !targetZone.classList.contains('tier-items')) {
+    targetZone = targetZone.parentElement;
+  }
+  if (!targetZone) return;
+
+  const tierRow = targetZone.closest('.tier-row');
+  const newTier = tierRow ? tierRow.dataset.tier : 'unranked';
+
+  tierRow && tierRow.classList.remove('drag-over');
+
+  // Update Firebase
+  if (firebaseReady && !id.startsWith('local_')) {
+    dbUpdate(dbRef(db, `items/${id}`), { tier: newTier });
+  } else {
+    if (localItems[id]) localItems[id].tier = newTier;
+    renderAll();
+  }
+}
+
+// ════════════════════════════════
+//  Comment Panel
+// ════════════════════════════════
+let currentPanelItemId = null;
+let commentUnsubscribe = null;
+
+const TIER_COLORS = { SSS:'#ff4757', SS:'#ff7f50', S:'#ffa502', A:'#2ed573', B:'#1e90ff', C:'#a29bfe', D:'#b2bec3', 'ㄆㄨㄣ':'#6d4c41', unranked:'#dfe6e9' };
+
+function openCommentPanel(itemId) {
+  currentPanelItemId = itemId;
+  const item = localItems[itemId];
+  if (!item) return;
+
+  // Populate header
+  document.getElementById('panelName').textContent = item.name;
+  document.getElementById('panelMapLink').href = item.url;
+  const tier = item.tier || 'unranked';
+  const badge = document.getElementById('panelTierBadge');
+  badge.textContent = tier === 'unranked' ? '待分類' : tier;
+  badge.style.background = TIER_COLORS[tier] || '#ddd';
+
+  document.getElementById('commentPanel').style.display = 'flex';
+  document.getElementById('commentPanelBackdrop').style.display = 'block';
+  document.getElementById('commentTextarea').value = '';
+
+  // Listen to comments for this item
+  if (commentUnsubscribe) commentUnsubscribe();
+  if (firebaseReady) {
+    commentUnsubscribe = () => {}; // firebase onValue returns unsubscribe fn
+    const unsubFn = dbOnValue(dbRef(db, `items/${itemId}/comments`), snap => {
+      renderComments(snap.val() || {});
+    });
+    commentUnsubscribe = unsubFn;
+  } else {
+    renderComments((localItems[itemId] && localItems[itemId].comments) || {});
+  }
+
+  setTimeout(() => document.getElementById('commentTextarea').focus(), 200);
+}
+
+function closeCommentPanel() {
+  document.getElementById('commentPanel').style.display = 'none';
+  document.getElementById('commentPanelBackdrop').style.display = 'none';
+  if (commentUnsubscribe) { commentUnsubscribe(); commentUnsubscribe = null; }
+  currentPanelItemId = null;
+}
+
+function renderComments(comments) {
+  const list = document.getElementById('commentList');
+  const entries = Object.entries(comments).sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0));
+
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="comment-empty"><span class="empty-icon">💬</span>還沒有評論，來留第一則！</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(([cid, c]) => {
+    const time = c.ts ? timeAgo(c.ts) : '';
+    const isOwn = currentUser && c.authorId === currentUser.id;
+    return `
+      <div class="comment-item" id="c_${cid}">
+        <div class="comment-avatar" style="background:${c.authorColor || '#aaa'}" title="${c.author || '?'}">${initials(c.author || '?')}</div>
+        <div class="comment-body">
+          <div class="comment-meta">
+            <span class="comment-author">${escHtml(c.author || '?')}</span>
+            <span class="comment-time">${time}</span>
+          </div>
+          <div class="comment-text">${escHtml(c.text)}</div>
+          ${isOwn ? `<button class="comment-delete-btn" onclick="deleteComment('${cid}')">刪除</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  // Scroll to bottom
+  list.scrollTop = list.scrollHeight;
+}
+
+function sendComment() {
+  if (!currentUser) { changeUser(); return; }
+  const textarea = document.getElementById('commentTextarea');
+  const text = textarea.value.trim();
+  if (!text || !currentPanelItemId) return;
+
+  const comment = {
+    text,
+    author: currentUser.name,
+    authorId: currentUser.id,
+    authorColor: currentUser.color,
+    ts: Date.now()
+  };
+
+  if (firebaseReady && !currentPanelItemId.startsWith('local_')) {
+    const cRef = dbPush(dbRef(db, `items/${currentPanelItemId}/comments`));
+    dbSet(cRef, comment);
+  } else {
+    if (!localItems[currentPanelItemId].comments) localItems[currentPanelItemId].comments = {};
+    const cid = 'lc_' + Date.now();
+    localItems[currentPanelItemId].comments[cid] = comment;
+    renderComments(localItems[currentPanelItemId].comments);
+  }
+
+  textarea.value = '';
+  textarea.style.height = '';
+}
+
+function deleteComment(commentId) {
+  if (!currentPanelItemId) return;
+  if (firebaseReady) {
+    dbRemove(dbRef(db, `items/${currentPanelItemId}/comments/${commentId}`));
+  } else {
+    delete localItems[currentPanelItemId].comments[commentId];
+    renderComments(localItems[currentPanelItemId].comments);
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return '剛剛';
+  if (diff < 3600000) return `${Math.floor(diff/60000)} 分鐘前`;
+  if (diff < 86400000) return `${Math.floor(diff/3600000)} 小時前`;
+  return `${Math.floor(diff/86400000)} 天前`;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════
+//  Toast
+// ════════════════════════════════
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ════════════════════════════════
+//  Init
+// ════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  loadUser();
+  if (!currentUser) {
+    setTimeout(() => document.getElementById('nameInput').focus(), 300);
+  }
+});
+</script>
+</body>
+</html>
